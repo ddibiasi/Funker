@@ -1,0 +1,2 @@
+include ':app', ':funker'
+rootProject.name='FunkerTest'
