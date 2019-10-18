@@ -1,6 +1,6 @@
-# Funker
+<img src="https://www.dibiasi.nl/img/funker.png" title="Funker" width="400" height="400">
 
-![alt text](https://www.dibiasi.nl/img/funker.png "Funker"  | width=30)
+# Funker
 
 > Easy to use bluetooth library for RFCOMM and OBEX on Android. Powered by Rx!
 
