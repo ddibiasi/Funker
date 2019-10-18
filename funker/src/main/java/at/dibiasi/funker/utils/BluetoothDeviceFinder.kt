@@ -1,4 +1,4 @@
-package at.dibiasi.funker
+package at.dibiasi.funker.utils
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -21,11 +21,11 @@ class BluetoothDeviceFinder(private val context: Context) {
         private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
 
         /**
-         * Searches bonded devices and doesnt look for new ones
+         * Searches bonded devices and doesn't look for new ones
          * is NOT async
-         * @return Bluetoothdevice
+         * @return Bluetoothdevice?
          */
-        fun quickSearchSync(address: String): BluetoothDevice? {
+        fun searchBonded(address: String): BluetoothDevice? {
             Log.d(TAG, "Starting search")
             val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter?.bondedDevices
             return try {

@@ -1,18 +1,17 @@
 package nl.dibiasi.funkertest
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothDevice
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import at.dibiasi.funker.BluetoothDeviceFinder
+import at.dibiasi.funker.utils.BluetoothDeviceFinder
 import at.dibiasi.funker.obex.RxOBEX
 import at.dibiasi.funker.rfcomm.RxSpp
+import at.dibiasi.funker.utils.FunkerUtils
+import at.dibiasi.funker.utils.removeBond
 import at.dibiasi.funker.utils.subscribeBy
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
 import com.uber.autodispose.autoDisposable
-import io.reactivex.Completable
-import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 
 private const val TAG = "### MainActivity"
@@ -30,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val finder = BluetoothDeviceFinder(applicationContext)
         startBluetoothDeviceSearch(finder)
+
     }
 
     @SuppressLint("CheckResult")
@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
             .autoDisposable(scopeProvider)
             .subscribeBy(
                 onNext = { device ->
-                    Log.d(TAG, "Found device: ")
+                    Log.d(TAG, "Found device: ${device.name}")
                 },
                 onError = {
                     Log.e(TAG, "Error occoured")

@@ -1,7 +1,6 @@
-***INSERT GRAPHIC HERE (include hyperlink in image)***
 # Funker
 
-![alt text](https://www.dibiasi.nl/img/funker.png "Funker")
+![alt text](https://www.dibiasi.nl/img/funker.png "Funker"  | width=30)
 
 > Easy to use bluetooth library for RFCOMM and OBEX on Android. Powered by Rx!
 
@@ -100,6 +99,56 @@ allprojects {
 
 ## Usage
 ### UTILS
+The utils package includes multiple bluetooth related helper methods, to make your life as a developer easier.
+
+If you want to search for bluetooth devies, you can use the BluetoothDeviceFinder.
+```kotlin
+    val finder = BluetoothDeviceFinder(applicationContext)
+    finder
+     .search(checkPaired = true, indefinite = true)
+     .subscribeOn(Schedulers.io()) // run in background
+     .observeOn(Schedulers.io())
+     .distinct() // don't emit devices multiple times
+     .filter {  // you can filter for specific things, like the name, bondstate, address, etc..
+         it.name?.contains("rubberduck", ignoreCase = true) ?: false    // will only emit devices with the string "rubberduck" in them
+     }
+     .autoDisposable(scopeProvider) // See the AutoDispose GitHub page from Uber
+     .subscribeBy(
+         onNext = { device ->
+             Log.d(TAG, "Found device: ${device.name}") // A device has been found
+         },
+         onError = {
+             Log.e(TAG, "Error occoured")
+             it.printStackTrace()
+         },
+         onComplete = { Log.d(TAG, "Completed search") }
+     )
+```
+
+Check if bluetooth is enabled
+```kotlin
+     FunkerUtils.isBluetoothEnabled()
+```
+
+If you want to completely remove the bond to a bluetooth device
+```kotlin
+     var device: BluetoothDevice = ..
+     device.removeBond()
+     ...
+```
+
+If you want to retry (resend) a specific command, you can use retryConditional.
+The following example retries reading 5 times, when an IOException occours and waits 100 millis before restarting.
+```kotlin
+  rxSpp
+    .read()
+    .retryConditional(
+      predicate = { it is IOException },
+      maxRetry = 5,
+      delayBeforeRetryInMillis = 100
+    )
+    ....
+```
 
 ### RFCOMM
 
