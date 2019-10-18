@@ -6,10 +6,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import at.dibiasi.funker.BluetoothDeviceFinder
+import at.dibiasi.funker.obex.RxOBEX
 import at.dibiasi.funker.rfcomm.RxSpp
 import at.dibiasi.funker.utils.subscribeBy
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
 import com.uber.autodispose.autoDisposable
+import io.reactivex.Completable
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 
@@ -60,6 +62,7 @@ class MainActivity : AppCompatActivity() {
             .observeOn(Schedulers.io())
             .subscribeOn(Schedulers.io())
             .retry(MAX_RETRIES)
+            .autoDisposable(scopeProvider)
             .subscribeBy(
                 onComplete = {
                     Log.d(TAG, "Succesfully sent $command to ${device.address}")
@@ -68,4 +71,24 @@ class MainActivity : AppCompatActivity() {
                     Log.e(TAG, "Received error!")
                 })
     }
+
+    @SuppressLint("CheckResult")
+    fun sendFile(device: BluetoothDevice){
+        val rxOBEX = RxOBEX(device)
+        rxOBEX
+            .putFile("rubberduck.txt", "text/plain", "oh hi mark".toByteArray(), "test")
+            .observeOn(Schedulers.io())
+            .subscribeOn(Schedulers.io())
+            .autoDisposable(scopeProvider)
+            .subscribeBy(
+                onComplete = {
+                    Log.d(TAG, "Succesfully sent a testfile to ${device.address}")
+                },
+                onError = { e ->
+                    Log.e(TAG, "Received error!")
+                })
+    }
+
+
+
 }

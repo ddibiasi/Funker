@@ -75,10 +75,6 @@ class RxOBEX(val device: BluetoothDevice) {
         return putFile(file.name, mimeType, bytes, path)
     }
 
-    fun putTestFile(): Completable {
-        return putFile("nice.hoss", "text/plain", "[CLIENT] Test".toByteArray(), "firmware")
-    }
-
     /**
      * @param file to be sent to remote
      */
