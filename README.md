@@ -1,6 +1,7 @@
 ***INSERT GRAPHIC HERE (include hyperlink in image)***
-
 # Funker
+
+![alt text](https://www.dibiasi.nl/img/funker.png "Funker")
 
 > Easy to use bluetooth library for RFCOMM and OBEX on Android. Powered by Rx!
 
@@ -58,7 +59,6 @@ rxSpp
         })
         
 ```
-
 
 ---
 
