@@ -1,6 +1,7 @@
 ***INSERT GRAPHIC HERE (include hyperlink in image)***
-
 # Funker
+
+![alt text](https://www.dibiasi.nl/img/funker.png "Funker")
 
 > Easy to use bluetooth library for RFCOMM and OBEX on Android. Powered by Rx!
 
@@ -59,7 +60,6 @@ rxSpp
         
 ```
 
-
 ---
 
 ## Setup
@@ -81,9 +81,29 @@ allprojects {
 	}
 ```
 
+- Add [RxJava](https://github.com/ReactiveX/RxJava) and optionally [RxAndroid](https://github.com/ReactiveX/RxAndroid), [RxKotlin](https://github.com/ReactiveX/RxKotlin)
+```
+    implementation 'io.reactivex.rxjava2:rxjava:2.x.x'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.x.x'
+    implementation("io.reactivex.rxjava2:rxkotlin:2.x.x")
+```
+
+- [AutoDispose](https://github.com/uber/AutoDispose) by Uber is recommended but not necessary
+```
+      implementation 'com.uber.autodispose:autodispose:1.x.x'
+      implementation 'com.uber.autodispose:autodispose-lifecycle:1.x.x'
+      implementation 'com.uber.autodispose:autodispose-android:1.x.x'
+      implementation 'com.uber.autodispose:autodispose-android-archcomponents:1.x.x'
+      implementation 'com.uber.autodispose:autodispose-rxlifecycle:1.x.x'
+```
+
 
 ## Usage
-- tbd
+### UTILS
+
+### RFCOMM
+
+### OBEX
 
 ---
 
