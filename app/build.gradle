@@ -28,6 +28,18 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/LICENSE.md'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE.md'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+    }
 }
 
 dependencies {
@@ -53,3 +65,4 @@ dependencies {
   //  implementation 'com.github.ddibiasi:Funker:0.0.4'
     implementation project(path: ':funker')
 }
+
