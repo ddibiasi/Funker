@@ -128,20 +128,11 @@ class RxSpp(val device: BluetoothDevice, readBufferSize: Int = 1014) {
     }
 
     /**
-     * Wrapper to use command object
-     * Simply converts command to string and sends it to device
-     */
-    fun send(command: SppCommand, enableCr: Boolean = true, enableLf: Boolean = true): Completable {
-        return send(command.toString(), enableCr, enableLf)
-    }
-
-    /**
      * Sends given string to connected client.
      * @param msg Message to be sent
      * @param enableCr Appends carriage return to msg
      * @param enableLf Appends line feed to msg
      *
-     * todo alter observable type to enum
      */
     fun send(msg: String, enableCr: Boolean = true, enableLf: Boolean = true): Completable {
         Log.d(TAG, "Sending $msg")
