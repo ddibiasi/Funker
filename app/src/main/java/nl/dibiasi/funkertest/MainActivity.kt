@@ -1,18 +1,17 @@
 package nl.dibiasi.funkertest
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import at.dibiasi.funker.utils.BluetoothDeviceFinder
 import at.dibiasi.funker.obex.RxOBEX
 import at.dibiasi.funker.rfcomm.RxSpp
-import at.dibiasi.funker.utils.FunkerUtils
-import at.dibiasi.funker.utils.removeBond
-import at.dibiasi.funker.utils.subscribeBy
+import at.dibiasi.funker.utils.*
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
 import com.uber.autodispose.autoDisposable
 import io.reactivex.schedulers.Schedulers
+import java.io.IOException
 
 private const val TAG = "### MainActivity"
 private const val MAX_RETRIES = 5L
@@ -52,6 +51,41 @@ class MainActivity : AppCompatActivity() {
                     it.printStackTrace()
                 },
                 onComplete = { Log.d(TAG, "Completed search") }
+            )
+    }
+
+    @SuppressLint("CheckResult")
+    fun connectToDevice(device:BluetoothDevice){
+        rxSpp = RxSpp(device)
+        rxSpp!!
+            .connect()
+            .observeOn(Schedulers.io())
+            .autoDisposable(scopeProvider)
+            .subscribeBy(
+                onError = { Log.e(TAG, "Received an error", it) },
+                onComplete = {Log.d(TAG, "Connected to device")}
+
+            )
+    }
+
+    @SuppressLint("CheckResult")
+    fun readRfcomm(){
+        val rxSpp = rxSpp ?: return // Make sure variable is not null
+        rxSpp.read()
+            .observeOn(Schedulers.newThread())
+            .subscribeOn(Schedulers.newThread())
+            .retryConditional(
+                predicate = { it is IOException },
+                maxRetry = 5,
+                delayBeforeRetryInMillis = 100
+            )
+            .autoDisposable(scopeProvider)
+            .subscribeBy (
+                onNext = {
+                    Log.d(TAG, "Received: $it")
+                },
+                onError = { Log.e(TAG, "Received an error", it) },
+                onComplete = { Log.d(TAG, "Read completed")}
             )
     }
 
