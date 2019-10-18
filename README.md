@@ -98,6 +98,98 @@ implementation 'com.uber.autodispose:autodispose-rxlifecycle:1.x.x'
 
 
 ## Usage
+### RFCOMM
+The RFCOMM package wraps everything neccessary to communicate via RFCOMM in a user friendly way.
+
+Connect to a device
+```kotlin
+val rxSpp = RxSpp(device)
+rxSpp
+    .connect()
+    .subscribeBy(
+        onError = { Log.e(TAG, "Received an error", it) },
+        onComplete = {Log.d(TAG, "Connected to device")}
+    )
+```
+
+Read data from connected device
+```kotlin
+rxSpp
+    .read()
+    .retryConditional(
+        predicate = { it is IOException },
+        maxRetry = 5,
+        delayBeforeRetryInMillis = 100
+    )
+    .subscribeBy (
+        onNext = {
+            Log.d(TAG, "Received: $it")
+        },
+        onError = { Log.e(TAG, "Received an error", it) },
+        onComplete = { Log.d(TAG, "Read completed")}
+    )
+```
+
+Send data to a device
+```kotlin
+rxSpp
+    .send("light on")
+    .subscribeBy(
+        onError = { e ->
+            Log.e(TAG, "Received error!")
+        },
+        onComplete = {
+            Log.d(TAG, "Succesfully sent $command to device")
+        }
+    )
+```
+
+### OBEX
+Send file to device
+```kotlin
+val rxOBEX = RxObex(device)
+rxOBEX
+    .putFile("rubberduck.txt", "text/plain", "oh hi mark".toByteArray(), "example/directory")  // Name of file, mimetype, bytes of file, directory
+    .subscribeBy(
+        onComplete = {
+            Log.d(TAG, "Succesfully sent a testfile to device")
+        },
+        onError = { e ->
+            Log.e(TAG, "Received error!")
+        }
+    )
+```
+
+Delete file from device
+```kotlin
+rxOBEX
+    .deleteFile("rubberduck.txt", "example/directory")
+    .subscribeBy(
+        onComplete = {
+            Log.d(TAG, "Succesfully deleted rubberduck.txt from device")
+        },
+        onError = { e ->
+            Log.e(TAG, "Received error!")
+        }
+    )
+```
+
+List files in given directory on device. The remote file structure gets automatically mapped to a FolderListing object.
+```kotlin
+rxOBEX
+    .listFiles("example/directory") // List files in /example/directory
+    .subscribeBy(
+        onSuccess = {
+            folderlisting ->
+            Log.d(TAG, "Retrieved folderlisting")
+            Log.d(TAG, folderlisting.toString())
+        },
+        onError = { e ->
+            Log.e(TAG, "Received error!")
+        }
+    )
+```
+
 ### UTILS
 The utils package includes multiple bluetooth related helper methods, to make your life as a developer easier.
 
@@ -148,98 +240,6 @@ rxSpp
       delayBeforeRetryInMillis = 100
     )
 ....
-```
-
-### RFCOMM
-The rfcomm package wraps everything neccessary to communicate via RFCOMM in a user friendly way.
-
-Connect to a device
-```kotlin
-val rxSpp = RxSpp(device)
-rxSpp
-    .connect()
-    .subscribeBy(
-        onError = { Log.e(TAG, "Received an error", it) },
-        onComplete = {Log.d(TAG, "Connected to device")}
-    )
-```
-
-
-Read data from connected device
-```kotlin
-rxSpp
-    .read()
-    .retryConditional(
-        predicate = { it is IOException },
-        maxRetry = 5,
-        delayBeforeRetryInMillis = 100
-    )
-    .subscribeBy (
-        onNext = {
-            Log.d(TAG, "Received: $it")
-        },
-        onError = { Log.e(TAG, "Received an error", it) },
-        onComplete = { Log.d(TAG, "Read completed")}
-    )
-```
-
-Send data to a device
-```kotlin
-rxSpp
-    .send("light on")
-    .subscribeBy(
-        onError = { e ->
-            Log.e(TAG, "Received error!")
-        },
-        onComplete = {
-            Log.d(TAG, "Succesfully sent $command to device")
-        }
-    )
-```
-### OBEX
-Send file to device
-```kotlin
-val rxOBEX = RxObex(device)
-rxOBEX
-    .putFile("rubberduck.txt", "text/plain", "oh hi mark".toByteArray(), "example/directory")  // Name of file, mimetype, bytes of file, directory
-    .subscribeBy(
-        onComplete = {
-            Log.d(TAG, "Succesfully sent a testfile to device")
-        },
-        onError = { e ->
-            Log.e(TAG, "Received error!")
-        }
-    )
-```
-
-Delete file from device
-```kotlin
-rxOBEX
-    .deleteFile("rubberduck.txt", "example/directory")
-    .subscribeBy(
-        onComplete = {
-            Log.d(TAG, "Succesfully deleted rubberduck.txt from device")
-        },
-        onError = { e ->
-            Log.e(TAG, "Received error!")
-        }
-    )
-```
-
-List files in given directory on device. The remote file structure gets automatically mapped to a FolderListing object.
-```kotlin
-rxOBEX
-    .listFiles("example/directory") // List files in /test
-    .subscribeBy(
-        onSuccess = {
-            folderlisting ->
-            Log.d(TAG, "Retrieved folderlisting")
-            Log.d(TAG, folderlisting.toString())
-        },
-        onError = { e ->
-            Log.e(TAG, "Received error!")
-        }
-    )
 ```
 ---
 
