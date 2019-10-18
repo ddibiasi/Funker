@@ -2,6 +2,7 @@ package at.dibiasi.funker.utils
 
 import com.uber.autodispose.CompletableSubscribeProxy
 import com.uber.autodispose.ObservableSubscribeProxy
+import com.uber.autodispose.SingleSubscribeProxy
 import io.reactivex.annotations.CheckReturnValue
 import io.reactivex.annotations.SchedulerSupport
 import io.reactivex.disposables.Disposable
@@ -10,6 +11,7 @@ import io.reactivex.functions.Consumer
 import io.reactivex.internal.functions.Functions
 
 private val onNextStub: (Any) -> Unit = {}
+private val onSuccessStub: (Any) -> Unit = {}
 private val onErrorStub: (Throwable) -> Unit = {}
 private val onCompleteStub: () -> Unit = {}
 
@@ -23,6 +25,16 @@ fun <T : Any> ObservableSubscribeProxy<T>.subscribeBy(
     onComplete: () -> Unit = onCompleteStub,
     onNext: (T) -> Unit = onNextStub
 ): Disposable = subscribe(onNext.asConsumer(), onError.asOnErrorConsumer(), onComplete.asOnCompleteAction())
+
+/**
+ * Overloaded subscribe function that allows passing named parameters for SingleSubscribeProxy
+ */
+@CheckReturnValue
+@SchedulerSupport(SchedulerSupport.NONE)
+fun <T : Any> SingleSubscribeProxy<T>.subscribeBy(
+    onError: (Throwable) -> Unit = onErrorStub,
+    onSuccess: (T) -> Unit = onSuccessStub
+): Disposable = subscribe(onSuccess.asConsumer(), onError.asOnErrorConsumer())
 
 /**
  * Overloaded subscribe function that allows passing named parameters
@@ -39,7 +51,6 @@ fun CompletableSubscribeProxy.subscribeBy(
     onError === onErrorStub -> subscribe(onComplete)
     else -> subscribe(onComplete.asOnCompleteAction(), Consumer(onError))
 }
-
 
 private fun <T : Any> ((T) -> Unit).asConsumer(): Consumer<T> {
     return if (this === onNextStub) Functions.emptyConsumer() else Consumer(this)

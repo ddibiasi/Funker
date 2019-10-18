@@ -68,7 +68,8 @@ class BluetoothDeviceFinder(private val context: Context) {
         if (bluetoothAdapter == null) { // is bluetooth available on this device
             emitter?.onError(NoBluetoothException())
         }
-        if (!bluetoothAdapter!!.isEnabled) { // enable bluetooth if not enabled
+
+        if (bluetoothAdapter?.isEnabled != true) { // enable bluetooth if not enabled
             Log.e(TAG, "Bluetooth is disabled")
             emitter?.onError(BluetoothDisabledException())
         }
