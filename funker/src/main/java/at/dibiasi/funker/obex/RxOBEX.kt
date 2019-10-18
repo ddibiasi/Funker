@@ -159,7 +159,6 @@ class RxOBEX(val device: BluetoothDevice) {
         }
     }
 
-
     /**
      * @param path Subfolder to navigate to. "" shows the root path.
      */

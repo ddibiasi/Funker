@@ -105,24 +105,24 @@ If you want to search for bluetooth devies, you can use the BluetoothDeviceFinde
 ```kotlin
 val finder = BluetoothDeviceFinder(applicationContext)
 finder
- .search(checkPaired = true, indefinite = true)
- .subscribeOn(Schedulers.io()) // run in background
- .observeOn(Schedulers.io())
- .distinct() // don't emit devices multiple times
- .filter {  // you can filter for specific things, like the name, bondstate, address, etc..
-     it.name?.contains("rubberduck", ignoreCase = true) ?: false    // will only emit devices with the string "rubberduck" in them
- }
- .autoDisposable(scopeProvider) // See the AutoDispose GitHub page from Uber
- .subscribeBy(
-     onNext = { device ->
-         Log.d(TAG, "Found device: ${device.name}") // A device has been found
-     },
-     onError = {
-         Log.e(TAG, "Error occoured")
-         it.printStackTrace()
-     },
-     onComplete = { Log.d(TAG, "Completed search") }
- )
+    .search(checkPaired = true, indefinite = true)
+    .subscribeOn(Schedulers.io())   // run in background
+    .observeOn(Schedulers.io())
+    .distinct() // don't emit devices multiple times
+    .filter {   // you can filter for specific things, like the name, bondstate, address, etc..
+        it.name?.contains("rubberduck", ignoreCase = true) ?: false // will only emit devices with the string "rubberduck" in them
+    }
+    .autoDisposable(scopeProvider)  // See the AutoDispose GitHub page from Uber
+    .subscribeBy(
+        onNext = { device ->
+            Log.d(TAG, "Found device: ${device.name}")  // A device has been found
+        },
+        onError = {
+            Log.e(TAG, "Error occoured")
+            it.printStackTrace()
+        },
+        onComplete = { Log.d(TAG, "Completed search") }
+    )
 ```
 
 Check if bluetooth is enabled
@@ -197,7 +197,50 @@ rxSpp
     )
 ```
 ### OBEX
+Send file to device
+```kotlin
+val rxOBEX = RxObex(device)
+rxOBEX
+    .putFile("rubberduck.txt", "text/plain", "oh hi mark".toByteArray(), "example/directory")  // Name of file, mimetype, bytes of file, directory
+    .subscribeBy(
+        onComplete = {
+            Log.d(TAG, "Succesfully sent a testfile to device")
+        },
+        onError = { e ->
+            Log.e(TAG, "Received error!")
+        }
+    )
+```
 
+Delete file from device
+```kotlin
+rxOBEX
+    .deleteFile("rubberduck.txt", "example/directory")
+    .subscribeBy(
+        onComplete = {
+            Log.d(TAG, "Succesfully deleted rubberduck.txt from device")
+        },
+        onError = { e ->
+            Log.e(TAG, "Received error!")
+        }
+    )
+```
+
+List files in given directory on device. The remote file structure gets automatically mapped to a FolderListing object.
+```kotlin
+rxOBEX
+    .listFiles("example/directory") // List files in /test
+    .subscribeBy(
+        onSuccess = {
+            folderlisting ->
+            Log.d(TAG, "Retrieved folderlisting")
+            Log.d(TAG, folderlisting.toString())
+        },
+        onError = { e ->
+            Log.e(TAG, "Received error!")
+        }
+    )
+```
 ---
 
 ## License

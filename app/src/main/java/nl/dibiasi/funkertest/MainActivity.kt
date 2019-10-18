@@ -151,7 +151,9 @@ class MainActivity : AppCompatActivity() {
             .autoDisposable(scopeProvider)
             .subscribeBy(
                 onSuccess = {
-                    Log.d(TAG, "Succesfully deleted the file")
+                    folderlisting ->
+                    Log.d(TAG, "Retrieved folderlisting")
+                    Log.d(TAG, folderlisting.toString())
                 },
                 onError = { e ->
                     Log.e(TAG, "Received error!")
