@@ -66,17 +66,16 @@ class RxOBEX(val device: BluetoothDevice) {
      * Wrapper to send file
      */
     fun putFile(file: File, path: String): Completable {
-        val mimeType = if (file.extension == "hoss") {
-            "text/plain"
-        } else {
-            MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
-        }!!
+        val mimeType= MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?:  "text/plain"
         val bytes = file.readBytes()
         return putFile(file.name, mimeType, bytes, path)
     }
 
     /**
-     * @param file to be sent to remote
+     * @param name Name of file
+     * @param mimeType MimeType of file (eg. text/plain)
+     * @param filebytes Byte content of file
+     * @param path Path to file on server
      */
     fun putFile(name: String, mimeType: String, filebytes: ByteArray, path: String = ""): Completable {
         return Completable.create { emitter ->
@@ -111,6 +110,44 @@ class RxOBEX(val device: BluetoothDevice) {
                     try {
                         outputStream?.close()
                         putOperation?.close()
+                        session?.close()
+                    }catch (e: Exception){
+                        Log.e(TAG, "Couldn't close streams", e)
+                    }finally {
+                        emitter.onComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @param name Name of file
+     * @param path Path to file on server
+     */
+    fun deleteFile(name: String, path: String = ""): Completable {
+        return Completable.create { emitter ->
+            thread {
+                var session: ClientSession? = null
+                val bluetoothSocket = createSocket()
+                try {
+                    bluetoothSocket.connect()
+
+                    val sessionHeaderSet = HeaderSet()
+                    sessionHeaderSet.setHeader(HeaderSet.TARGET, getTargetBytes())
+                    session = createSession(sessionHeaderSet, bluetoothSocket)
+                    setPathOnSession(path, session)
+
+                    val headerSet = HeaderSet()
+                    headerSet.setHeader(HeaderSet.NAME, name)
+                    Log.d(TAG, "Deleting file")
+                    session.delete(headerSet)
+                } catch (e: IOException) {
+                    Log.e(TAG, "Error: ", e)
+                    emitter.onError(e)
+                } finally {
+                    Log.d(TAG, "Closing connection.")
+                    try {
                         session?.close()
                     }catch (e: Exception){
                         Log.e(TAG, "Couldn't close streams", e)
@@ -193,9 +230,4 @@ class RxOBEX(val device: BluetoothDevice) {
         Log.d(TAG, "Session created")
         return session
     }
-}
-
-enum class SendFileState(val id: Int, var message: String = "") {
-    DONE(1, "Done"),
-    ERROR(2, "An error occurred")
 }

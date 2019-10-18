@@ -22,6 +22,8 @@ class MainActivity : AppCompatActivity() {
 
     private val scopeProvider by lazy { AndroidLifecycleScopeProvider.from(this) }
 
+    var rxSpp: RxSpp? = null
+    var rxOBEX: RxOBEX? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +46,6 @@ class MainActivity : AppCompatActivity() {
             .subscribeBy(
                 onNext = { device ->
                     Log.d(TAG, "Found device: ")
-                    sendRfcommCommand(device, "oh hi mark")
                 },
                 onError = {
                     Log.e(TAG, "Error occoured")
@@ -55,8 +56,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("CheckResult")
-    fun sendRfcommCommand(device: BluetoothDevice, command: String) {
-        val rxSpp = RxSpp(device)
+    fun sendRfcommCommand(command: String) {
+        val rxSpp = rxSpp ?: return // Make sure variable is not null
         rxSpp
             .send(command)
             .observeOn(Schedulers.io())
@@ -65,7 +66,7 @@ class MainActivity : AppCompatActivity() {
             .autoDisposable(scopeProvider)
             .subscribeBy(
                 onComplete = {
-                    Log.d(TAG, "Succesfully sent $command to ${device.address}")
+                    Log.d(TAG, "Succesfully sent $command to device")
                 },
                 onError = { e ->
                     Log.e(TAG, "Received error!")
@@ -73,8 +74,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("CheckResult")
-    fun sendFile(device: BluetoothDevice){
-        val rxOBEX = RxOBEX(device)
+    fun sendFile() {
+        val rxOBEX = rxOBEX ?: return // Make sure variable is not null
         rxOBEX
             .putFile("rubberduck.txt", "text/plain", "oh hi mark".toByteArray(), "test")
             .observeOn(Schedulers.io())
@@ -82,13 +83,45 @@ class MainActivity : AppCompatActivity() {
             .autoDisposable(scopeProvider)
             .subscribeBy(
                 onComplete = {
-                    Log.d(TAG, "Succesfully sent a testfile to ${device.address}")
+                    Log.d(TAG, "Succesfully sent a testfile to device")
                 },
                 onError = { e ->
                     Log.e(TAG, "Received error!")
                 })
     }
 
+    @SuppressLint("CheckResult")
+    fun deleteFile() {
+        val rxOBEX = rxOBEX ?: return // Make sure variable is not null
+        rxOBEX
+            .deleteFile("rubberduck.txt", "test")
+            .observeOn(Schedulers.io())
+            .subscribeOn(Schedulers.io())
+            .autoDisposable(scopeProvider)
+            .subscribeBy(
+                onComplete = {
+                    Log.d(TAG, "Succesfully deleted the file")
+                },
+                onError = { e ->
+                    Log.e(TAG, "Received error!")
+                })
+    }
 
+    @SuppressLint("CheckResult")
+    fun listFilesInDirectory() {
+        val rxOBEX = rxOBEX ?: return // Make sure variable is not null
+        rxOBEX
+            .listFiles("test") // List files in /test
+            .observeOn(Schedulers.io())
+            .subscribeOn(Schedulers.io())
+            .autoDisposable(scopeProvider)
+            .subscribeBy(
+                onSuccess = {
+                    Log.d(TAG, "Succesfully deleted the file")
+                },
+                onError = { e ->
+                    Log.e(TAG, "Received error!")
+                })
+    }
 
 }
