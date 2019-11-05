@@ -26,11 +26,7 @@ import kotlin.concurrent.thread
 
 private const val TAG = "### RxOBEX"
 
-/**
- * TODO: fix everytime the device communicates via bl a new socket is created
- * @see http://www.bluecove.org/bluecove/apidocs/javax/javax.obex/ClientSession.html
- */
-class RxOBEX(val device: BluetoothDevice): BluetoothConnection(device) {
+class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
 
     private val obexFiletransferUUID = UUID.fromString(OBEXFileTransferServiceClass)
     private val folderBrowsingUUID = UUID.fromString(OBEXFolderBrowsing)
@@ -72,6 +68,8 @@ class RxOBEX(val device: BluetoothDevice): BluetoothConnection(device) {
     }
 
     /**
+     * TODO Testing
+     * Warning: Untested!
      * @param name Name of file
      * @param mimeType MimeType of file (eg. text/plain)
      * @param filebytes Byte content of file
@@ -119,6 +117,8 @@ class RxOBEX(val device: BluetoothDevice): BluetoothConnection(device) {
     }
 
     /**
+     * TODO Testing
+     * Warning: Untested!
      * @param name Name of file
      * @param path Path to file on server
      */
@@ -155,11 +155,13 @@ class RxOBEX(val device: BluetoothDevice): BluetoothConnection(device) {
 
 
     /**
+     * TODO Testing
+     * Warning: Untested!
      * @param path Subfolder to navigate to. "" shows the root path.
      */
     fun listFiles(path: String): Single<Folderlisting> {
         return Single.create { single ->
-            Log.d(TAG, "Started thread to list files from directory: $path")
+            Log.d(TAG, "File listing from directory: $path")
             var getOperation: Operation? = null
             var inputStreamReader: InputStreamReader? = null
             var session: ClientSession? = null
@@ -185,6 +187,44 @@ class RxOBEX(val device: BluetoothDevice): BluetoothConnection(device) {
                     mapper.readValue<Folderlisting>(xmlResponse, Folderlisting::class.java)
                 Log.d(TAG, "Loaded all folders from remote")
                 single.onSuccess(listing)
+            } catch (e: IOException) {
+                Log.e(TAG, "Error: ", e)
+                single.onError(e)
+            } finally {
+                inputStreamReader?.close()
+                getOperation?.close()
+                session?.disconnect(null)
+                Log.d(TAG, "Closing connection")
+            }
+        }
+    }
+
+    /**
+     * TODO Testing
+     * Warning: Untested!
+     */
+    fun getFile(path: String, mimeType: String?): Single<ByteArray> {
+        return Single.create { single ->
+            var getOperation: Operation? = null
+            val inputStreamReader: InputStreamReader? = null
+            var session: ClientSession? = null
+            val bluetoothSocket = bluetoothSocket ?: throw BluetoothSocketException()
+            try {
+                val sessionHeaderSet = HeaderSet()
+                sessionHeaderSet.setHeader(HeaderSet.TARGET, getTargetBytes())
+                session = createSession(bluetoothSocket)
+
+                setPathOnSession(path, session)
+
+                val requestHeaderSet = HeaderSet()
+                if (mimeType != null) {
+                    requestHeaderSet.setHeader(HeaderSet.TYPE, mimeType)
+                }
+                Log.d(TAG, "Sending request")
+                getOperation = session.get(requestHeaderSet)
+
+                val file = getOperation.openInputStream().readBytes()
+                single.onSuccess(file)
             } catch (e: IOException) {
                 Log.e(TAG, "Error: ", e)
                 single.onError(e)
