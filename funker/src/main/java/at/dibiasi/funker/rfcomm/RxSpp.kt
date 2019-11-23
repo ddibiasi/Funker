@@ -1,22 +1,14 @@
 package at.dibiasi.funker.rfcomm
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothSocket
 import android.util.Log
-import at.dibiasi.funker.SerialPortServiceClass
+import at.dibiasi.funker.common.SerialPortServiceClass
 import at.dibiasi.funker.common.BluetoothConnection
-import at.dibiasi.funker.error.BluetoothConnectionException
 import at.dibiasi.funker.error.BluetoothSocketException
 import at.dibiasi.funker.error.BluetoothStreamException
 import io.reactivex.Completable
 import io.reactivex.Observable
-import io.reactivex.disposables.CompositeDisposable
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.util.*
-import kotlin.concurrent.thread
 
 private const val TAG = "### RxSpp"
 

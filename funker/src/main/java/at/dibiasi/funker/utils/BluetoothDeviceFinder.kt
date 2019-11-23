@@ -1,4 +1,4 @@
-package at.dibiasi.funker
+package at.dibiasi.funker.utils
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -35,7 +35,12 @@ class BluetoothDeviceFinder(private val context: Context) {
                 null
             }
         }
+
+        fun isBluetoothEnabled(): Boolean {
+            return bluetoothAdapter?.isEnabled ?: false
+        }
     }
+
 
     private var addressToBeSearchedFor: String = ""
     private var indefiniteSearch: Boolean = false

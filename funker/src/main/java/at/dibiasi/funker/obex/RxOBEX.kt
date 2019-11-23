@@ -1,27 +1,23 @@
 package at.dibiasi.funker.obex
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothObexTransport
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import android.webkit.MimeTypeMap
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import at.dibiasi.funker.OBEXFileTransferServiceClass
-import at.dibiasi.funker.OBEXFolderBrowsing
+import at.dibiasi.funker.common.OBEXFileTransferServiceClass
+import at.dibiasi.funker.common.OBEXFolderBrowsing
 import at.dibiasi.funker.common.BluetoothConnection
 import at.dibiasi.funker.error.BluetoothSocketException
 import io.reactivex.Completable
-import io.reactivex.Observable
 import io.reactivex.Single
 import java.io.*
 import java.io.File
 import java.lang.Exception
-import java.net.ConnectException
 import java.nio.ByteBuffer
 import java.util.*
 import javax.obex.*
-import kotlin.concurrent.thread
 
 
 private const val TAG = "### RxOBEX"

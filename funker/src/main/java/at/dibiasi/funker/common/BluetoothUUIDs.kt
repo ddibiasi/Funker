@@ -1,4 +1,4 @@
-package at.dibiasi.funker
+package at.dibiasi.funker.common
 
 const val DEVICE_UUID = "4f29635b-534a-4a54-b375-e298e7f8a874"
 
