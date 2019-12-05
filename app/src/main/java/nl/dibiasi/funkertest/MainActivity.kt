@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import at.dibiasi.funker.utils.BluetoothDeviceFinder
 import at.dibiasi.funker.obex.RxOBEX
 import at.dibiasi.funker.rfcomm.RxSpp
 import at.dibiasi.funker.utils.*
@@ -28,7 +29,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val finder = BluetoothDeviceFinder(applicationContext)
         startBluetoothDeviceSearch(finder)
-
     }
 
     @SuppressLint("CheckResult")

@@ -1,21 +1,14 @@
 package at.dibiasi.funker.rfcomm
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothSocket
 import android.util.Log
-import at.dibiasi.funker.SerialPortServiceClass
-import at.dibiasi.funker.error.BluetoothConnectionException
+import at.dibiasi.funker.common.SerialPortServiceClass
+import at.dibiasi.funker.common.BluetoothConnection
 import at.dibiasi.funker.error.BluetoothSocketException
 import at.dibiasi.funker.error.BluetoothStreamException
 import io.reactivex.Completable
 import io.reactivex.Observable
-import io.reactivex.disposables.CompositeDisposable
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.util.*
-import kotlin.concurrent.thread
 
 private const val TAG = "### RxSpp"
 
@@ -24,80 +17,31 @@ private const val TAG = "### RxSpp"
  * It is heavily substituted by Rx and threads
  * @param device Bluetooth device you want to talk to
  */
-class RxSpp(val device: BluetoothDevice, readBufferSize: Int = 1014) {
-
-    /**
-     * Default bluetooth adapter of phone
-     */
-    private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
-
-    /**
-     * Buffer used for reading values from target
-     */
-    private var readBuffer: ByteArray = ByteArray(readBufferSize)
+class RxSpp(val device: BluetoothDevice) : BluetoothConnection(device) {
 
     /**
      * Serial communication rfcomm uuid
      */
     private val sppUuid: UUID = UUID.fromString(SerialPortServiceClass)
 
-    /**
-     * Bluetooth socket to be used in communication
-     */
-    private var bluetoothSocket: BluetoothSocket? = null
-
-    /**
-     * Input stream from bluetoothSocket
-     */
-    private var inputStream: InputStream? = null
-
-    /**
-     * Output stream from bluetoothSocket
-     */
-    private var outputStream: OutputStream? = null
 
     private var closingConnectionFlag = false
 
+
     /**
      * Cancels running discovery and tries to connect to the device.
-     * @param retries How many times should be tried to connect to device. (Low end computer tend to not respond immediately)
-     *
      */
-    fun connect(retries: Int = 5): Completable {
+    fun connect(): Completable {
         return Completable.create { source ->
-            if (bluetoothAdapter != null) {
-                bluetoothAdapter.cancelDiscovery()
-                bluetoothSocket = device.createRfcommSocketToServiceRecord(sppUuid)
-                if (bluetoothSocket == null) {
-                    source.onError(Exception("Could not create bluetooth socket"))
-                    return@create
-                }
-                val bluetoothSocket = bluetoothSocket!!
-                var count = 0
-                while (!bluetoothSocket.isConnected && count < retries && !closingConnectionFlag) {
-                    try {
-                        bluetoothSocket.connect()
-                    } catch (e: IOException) {
-                        Log.e(TAG, "Could not connect. ${count + 1} try")
-                    }
-                    count++
-                }
-                if (!bluetoothSocket.isConnected) {
-                    source.onError(BluetoothConnectionException(tries = retries))
-                    return@create
-                }
-                inputStream = bluetoothSocket.inputStream
-                outputStream = bluetoothSocket.outputStream
+            try {
+                connect(sppUuid)
                 source.onComplete()
-            } else {
-                source.onError(BluetoothConnectionException("Bluetooth adapter is not initialized."))
+            } catch (e: java.lang.Exception) {
+                source.onError(e)
             }
         }
     }
 
-    fun isConnected(): Boolean {
-        return bluetoothSocket?.isConnected ?: false
-    }
 
     /**
      * Constantly reads from connected socket, emits when something is written
@@ -106,10 +50,13 @@ class RxSpp(val device: BluetoothDevice, readBufferSize: Int = 1014) {
         return Observable.create { emitter ->
             val bluetoothSocket = bluetoothSocket ?: throw BluetoothSocketException()
             val inputStream = inputStream ?: throw BluetoothStreamException()
+            val inputReader = inputStream.bufferedReader()
             while (bluetoothSocket.isConnected) {
                 try {
                     Log.d(TAG, "Waiting for reply")
-                    inputStream.read(readBuffer)
+                    val answer = inputReader.readLine()
+                    Log.d(TAG, "Received : $answer")
+                    emitter.onNext(answer)
                 } catch (e: Exception) {
                     if (closingConnectionFlag) {
                         Log.d(TAG, "Input stream was intentionally disconnected")
@@ -120,9 +67,7 @@ class RxSpp(val device: BluetoothDevice, readBufferSize: Int = 1014) {
                     }
                     break
                 }
-                val answer = String(readBuffer)
-                Log.d(TAG, "Received : $readBuffer")
-                emitter.onNext(answer)
+
             }
         }
     }
