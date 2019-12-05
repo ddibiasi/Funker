@@ -38,7 +38,7 @@ open class BluetoothConnection(val blDevice: BluetoothDevice) {
      * @param retries How many times should be tried to connect to device. (Low end computer tend to not respond immediately)
      *
      */
-    fun connect(uuid: UUID, retries: Int = 5) {
+    fun connect(uuid: UUID, retries: Int = 5, timeoutInMillis: Int = 1000) {
         bluetoothAdapter.cancelDiscovery()
         bluetoothSocket = blDevice.createRfcommSocketToServiceRecord(uuid)
         if (bluetoothSocket == null) {
@@ -50,7 +50,8 @@ open class BluetoothConnection(val blDevice: BluetoothDevice) {
             try {
                 bluetoothSocket.connect()
             } catch (e: IOException) {
-                Log.e(TAG, "Could not connect. ${count + 1} try")
+                Log.e(TAG, "Could not connect. ${count + 1} try. Waiting 1000ms.")
+                Thread.sleep(1000)
             }
             count++
         }

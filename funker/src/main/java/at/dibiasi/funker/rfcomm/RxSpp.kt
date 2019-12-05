@@ -17,11 +17,7 @@ private const val TAG = "### RxSpp"
  * It is heavily substituted by Rx and threads
  * @param device Bluetooth device you want to talk to
  */
-class RxSpp(val device: BluetoothDevice, readBufferSize: Int = 1014) : BluetoothConnection(device) {
-    /**
-     * Buffer used for reading values from target
-     */
-    private var readBuffer: ByteArray = ByteArray(readBufferSize)
+class RxSpp(val device: BluetoothDevice) : BluetoothConnection(device) {
 
     /**
      * Serial communication rfcomm uuid
@@ -54,10 +50,13 @@ class RxSpp(val device: BluetoothDevice, readBufferSize: Int = 1014) : Bluetooth
         return Observable.create { emitter ->
             val bluetoothSocket = bluetoothSocket ?: throw BluetoothSocketException()
             val inputStream = inputStream ?: throw BluetoothStreamException()
+            val inputReader = inputStream.bufferedReader()
             while (bluetoothSocket.isConnected) {
                 try {
                     Log.d(TAG, "Waiting for reply")
-                    inputStream.read(readBuffer)
+                    val answer = inputReader.readLine()
+                    Log.d(TAG, "Received : $answer")
+                    emitter.onNext(answer)
                 } catch (e: Exception) {
                     if (closingConnectionFlag) {
                         Log.d(TAG, "Input stream was intentionally disconnected")
@@ -68,9 +67,7 @@ class RxSpp(val device: BluetoothDevice, readBufferSize: Int = 1014) : Bluetooth
                     }
                     break
                 }
-                val answer = String(readBuffer)
-                Log.d(TAG, "Received : $readBuffer")
-                emitter.onNext(answer)
+
             }
         }
     }
