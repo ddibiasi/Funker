@@ -30,11 +30,12 @@ class RxSpp(val device: BluetoothDevice) : BluetoothConnection(device) {
 
     /**
      * Cancels running discovery and tries to connect to the device.
+     * @param retries
      */
-    fun connect(): Completable {
+    fun connect(retries: Int = 5): Completable {
         return Completable.create { source ->
             try {
-                connect(sppUuid)
+                connect(uuid = sppUuid, retries = retries)
                 source.onComplete()
             } catch (e: java.lang.Exception) {
                 source.onError(e)

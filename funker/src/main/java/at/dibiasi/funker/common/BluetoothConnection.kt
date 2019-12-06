@@ -35,7 +35,7 @@ open class BluetoothConnection(val blDevice: BluetoothDevice) {
 
     /**
      * Cancels running discovery and tries to connect to the device.
-     * @param retries How many times should be tried to connect to device. (Low end computer tend to not respond immediately)
+     * @param retries How many times should be tried to connect to device. (Low end computer tend to not respond immediately). If set to -1, it will try indefinitely.
      *
      */
     fun connect(uuid: UUID, retries: Int = 5, timeoutInMillis: Int = 1000) {
@@ -46,7 +46,7 @@ open class BluetoothConnection(val blDevice: BluetoothDevice) {
         }
         val bluetoothSocket = bluetoothSocket!!
         var count = 0
-        while (!bluetoothSocket.isConnected && count < retries) {
+        while (!bluetoothSocket.isConnected && (count < retries || retries == -1)) {
             try {
                 bluetoothSocket.connect()
             } catch (e: IOException) {

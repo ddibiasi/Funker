@@ -29,18 +29,18 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
 
     /**
      * Cancels running discovery and tries to connect to the device.
+     * @param retries
      */
-    fun connect(): Completable {
+    fun connect(retries: Int = 5): Completable {
         return Completable.create { source ->
             try {
-                connect(obexFiletransferUUID)
+                connect(uuid = obexFiletransferUUID, retries = retries)
                 source.onComplete()
             } catch (e: Exception) {
                 source.onError(e)
             }
         }
     }
-
 
     /**
      * @return returns somehow important bytes. couldn't find any documentation.
