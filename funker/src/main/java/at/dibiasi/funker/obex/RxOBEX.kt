@@ -9,6 +9,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import at.dibiasi.funker.common.OBEXFileTransferServiceClass
 import at.dibiasi.funker.common.OBEXFolderBrowsing
 import at.dibiasi.funker.common.BluetoothConnection
+import at.dibiasi.funker.error.BluetoothConnectionException
 import at.dibiasi.funker.error.BluetoothSocketException
 import io.reactivex.Completable
 import io.reactivex.Single
@@ -24,6 +25,7 @@ private const val TAG = "### RxOBEX"
 
 class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
 
+    private var session: ClientSession? = null
     private val obexFiletransferUUID = UUID.fromString(OBEXFileTransferServiceClass)
     private val folderBrowsingUUID = UUID.fromString(OBEXFolderBrowsing)
 
@@ -35,12 +37,24 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
         return Completable.create { source ->
             try {
                 connect(uuid = obexFiletransferUUID, retries = retries)
+                createSession()
                 source.onComplete()
             } catch (e: Exception) {
                 source.onError(e)
             }
         }
     }
+
+    private fun createSession() {
+        val bluetoothSocket = bluetoothSocket ?: throw BluetoothSocketException()
+        session = createSession(bluetoothSocket)
+    }
+
+    private fun closeSession() {
+        session?.disconnect(null)
+        session?.close()
+    }
+
 
     /**
      * @return returns somehow important bytes. couldn't find any documentation.
@@ -77,12 +91,11 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
         filebytes: ByteArray,
         path: String = ""
     ): Completable {
+        val session = session ?: throw BluetoothConnectionException("Session is null")
         return Completable.create { emitter ->
-            val bluetoothSocket = bluetoothSocket ?: throw BluetoothSocketException()
-            var session: ClientSession? = null
+            var outputStream: OutputStream? = null
             var putOperation: Operation? = null
             try {
-                session = createSession(bluetoothSocket)
                 setPathOnSession(path, session)
 
                 val putHeaderSet = HeaderSet()
@@ -92,7 +105,7 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
                 Log.d(TAG, "Sending file")
                 putOperation = session.put(putHeaderSet)
 
-                val outputStream = putOperation.openOutputStream()
+                outputStream = putOperation.openOutputStream()
                 outputStream.write(filebytes)
                 outputStream.flush()
             } catch (e: IOException) {
@@ -101,8 +114,8 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
             } finally {
                 Log.d(TAG, "Closing Operation.")
                 try {
+                    outputStream?.close()
                     putOperation?.close()
-                    session?.close()
                 } catch (e: Exception) {
                     Log.e(TAG, "Couldn't close streams", e)
                 } finally {
@@ -119,13 +132,11 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
      * @param path Path to file on server
      */
     fun deleteFile(name: String, path: String = ""): Completable {
+        val session = session ?: throw BluetoothConnectionException("Session is null")
         return Completable.create { emitter ->
-            var session: ClientSession? = null
-            val bluetoothSocket = bluetoothSocket ?: throw BluetoothSocketException()
             try {
                 val sessionHeaderSet = HeaderSet()
                 sessionHeaderSet.setHeader(HeaderSet.TARGET, getTargetBytes())
-                session = createSession(bluetoothSocket)
                 setPathOnSession(path, session)
 
                 val headerSet = HeaderSet()
@@ -136,16 +147,8 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
                 Log.e(TAG, "Error: ", e)
                 emitter.onError(e)
             } finally {
-                Log.d(TAG, "Closing connection.")
-                try {
-                    session?.close()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Couldn't close streams", e)
-                } finally {
-                    emitter.onComplete()
-                }
+                emitter.onComplete()
             }
-
         }
     }
 
@@ -155,16 +158,14 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
      * @param path Subfolder to navigate to. "" shows the root path.
      */
     fun listFiles(path: String): Single<Folderlisting> {
+        val session = session ?: throw BluetoothConnectionException("Session is null")
         return Single.create { single ->
             Log.d(TAG, "File listing from directory: $path")
             var getOperation: Operation? = null
             var inputStreamReader: InputStreamReader? = null
-            var session: ClientSession? = null
-            val bluetoothSocket = bluetoothSocket ?: throw BluetoothSocketException()
             try {
                 val sessionHeaderSet = HeaderSet()
                 sessionHeaderSet.setHeader(HeaderSet.TARGET, getTargetBytes())
-                session = createSession(bluetoothSocket)
 
                 setPathOnSession(path, session)
 
@@ -186,10 +187,9 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
                 Log.e(TAG, "Error: ", e)
                 single.onError(e)
             } finally {
+                Log.d(TAG, "Closing connection")
                 inputStreamReader?.close()
                 getOperation?.close()
-                session?.disconnect(null)
-                Log.d(TAG, "Closing connection")
             }
         }
     }
@@ -199,15 +199,13 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
      * Warning: Untested!
      */
     fun getFile(path: String, mimeType: String?): Single<ByteArray> {
+        val session = session ?: throw BluetoothConnectionException("Session is null")
         return Single.create { single ->
             var getOperation: Operation? = null
             val inputStreamReader: InputStreamReader? = null
-            var session: ClientSession? = null
-            val bluetoothSocket = bluetoothSocket ?: throw BluetoothSocketException()
             try {
                 val sessionHeaderSet = HeaderSet()
                 sessionHeaderSet.setHeader(HeaderSet.TARGET, getTargetBytes())
-                session = createSession(bluetoothSocket)
 
                 setPathOnSession(path, session)
 
@@ -224,10 +222,9 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
                 Log.e(TAG, "Error: ", e)
                 single.onError(e)
             } finally {
+                Log.d(TAG, "Closing connection")
                 inputStreamReader?.close()
                 getOperation?.close()
-                session?.disconnect(null)
-                Log.d(TAG, "Closing connection")
             }
         }
     }
@@ -265,7 +262,7 @@ class RxOBEX(val device: BluetoothDevice) : BluetoothConnection(device) {
     }
 
     fun disconnect() {
-
+        closeSession()
         bluetoothSocket?.close()
     }
 }
