@@ -2,8 +2,7 @@
 
 # Funker
 
-> Easy to use bluetooth library for RFCOMM and OBEX on Android. Powered by Rx!
-
+An easy to use bluetooth library for RFCOMM and OBEX on Android. Powered by Rx!
 
 [![](https://jitpack.io/v/ddibiasi/Funker.svg)](https://jitpack.io/#ddibiasi/Funker)
 
@@ -15,18 +14,19 @@
 - Send & listen for RFCOMM commands
 - OBEX file transfer
 
+These [slides](https://dibiasi.nl/share/funker_pres.pdf) where part of my Bachelors thesis, have a look at them if you want.
+
 ## Examples
 
-Search for bluetooth devices
+Search for specific bluetooth devices
 ```kotlin
 finder
     .search(checkPaired = true, indefinite = true)
     .distinct()
+    .filter { it.name?.contains("your-device-name", ignoreCase = true) ?: false }
     .subscribeBy(
-        onNext = { device ->
-            Log.d(TAG, "Found device: ")
-        },
-        onError = { it.printStackTrace() },
+        onNext = { Log.d(TAG, "Found device: ${it.address}") },
+        onError = { Log.e(TAG, "Error occurred ${it.message}") },
         onComplete = { Log.d(TAG, "Completed search") }
     )
 ```
@@ -34,28 +34,22 @@ finder
 Send files via OBEX
 ```kotlin
 rxOBEX
-    .putFile("rubberduck.txt", "text/plain", "oh hi mark".toByteArray(), "test")
+    .putFile(file, "remote/directory")
     .subscribeBy(
-        onComplete = {
-            Log.d(TAG, "Succesfully sent a testfile to ${device.address}")
-        },
-        onError = { e ->
-            Log.e(TAG, "Received error!")
-        })
+        onComplete = { Log.d(TAG, "Succesfully sent a testfile to ${device.address}") },
+        onError = { Log.e(TAG, "Error occurred ${it.message}") }
+    )
     
 ```
 
 Send RFCOMM commands
 ```kotlin
 rxSpp
-    .send(command)
+    .send("your-command")
     .subscribeBy(
-        onComplete = {
-            Log.d(TAG, "Succesfully sent $command to ${device.address}")
-        },
-        onError = { e ->
-            Log.e(TAG, "Received error!")
-        })
+        onComplete = { Log.d(TAG, "Succesfully sent $command to ${device.address}") },
+        onError = { Log.e(TAG, "Error occurred ${it.message}") }
+     )
         
 ```
 
