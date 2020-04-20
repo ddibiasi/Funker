@@ -7,8 +7,6 @@ An easy to use bluetooth library for RFCOMM and OBEX on Android. Powered by Rx!
 [![](https://jitpack.io/v/ddibiasi/Funker.svg)](https://jitpack.io/#ddibiasi/Funker)
 
 
----
-
 ## Features
 - Find bluetooth devices
 - Send & listen for RFCOMM commands
