@@ -35,10 +35,6 @@ class BluetoothDeviceFinder(private val context: Context) {
                 null
             }
         }
-
-        fun isBluetoothEnabled(): Boolean {
-            return bluetoothAdapter?.isEnabled ?: false
-        }
     }
 
 
