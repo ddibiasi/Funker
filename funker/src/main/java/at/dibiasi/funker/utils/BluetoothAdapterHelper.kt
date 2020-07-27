@@ -45,7 +45,7 @@ class BluetoothAdapterHelper(private val context: Context) {
      * @param filter IntentFilter for BluetoothAdapter Actions, eg: IntentFilter(BluetoothDevice.ACTION_FOUND)
      * @return Emits when ever a state has changed
      */
-    fun getObservable(filter: IntentFilter?): Observable<Intent> {
+    fun getObservable(filter: IntentFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)): Observable<Intent> {
         Log.d(TAG, "Subscribing to adapter actions")
         return Observable.create {
             emitter = it

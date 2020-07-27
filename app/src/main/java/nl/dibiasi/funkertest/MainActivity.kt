@@ -44,12 +44,26 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupBluetooth() {
         checkBluetoothPermission()
-        if (!BluetoothDeviceFinder.isBluetoothEnabled()) {
+        testBlHelper()
+        if (!BluetoothAdapterHelper.isBluetoothEnabled()) {
             enableBluetooth()
         } else {
             Log.d(TAG, "Dispatched search")
             startBluetoothDeviceSearch(finder)
         }
+    }
+
+    @SuppressLint("CheckResult")
+    private fun testBlHelper() {
+        val helper = BluetoothAdapterHelper(context = applicationContext)
+        helper.getObservable()
+            .autoDisposable(scopeProvider)
+            .subscribeBy(
+                onNext = {
+                    Log.d(TAG, intent.action)
+                },
+                onError = {Log.e(TAG, it.message)}
+            )
     }
 
     private fun checkBluetoothPermission() {
